@@ -3,23 +3,37 @@ import { useState } from "react";
 import { auth } from "@/lib/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [shake, setShake] = useState(false);
   const router = useRouter();
 
   async function handleLogin() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err: any) {
+      setError("Invalid credentials");
+      setShake(true);
+
+      // Clear input fields
+      setEmail("");
+      setPassword("");
+
+      // Stop shaking after animation
+      setTimeout(() => setShake(false), 500);
     }
   }
+
+  const shakeAnimation = {
+    x: shake ? [0, -10, 10, -10, 10, 0] : 0,
+    transition: { duration: 0.5 },
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-purple-900 to-black">
@@ -33,12 +47,22 @@ export default function LoginPage() {
           Welcome Back 📚
         </h1>
 
-        {error && (
-          <p className="text-red-400 text-sm mb-3 text-center">{error}</p>
-        )}
+        <AnimatePresence>
+          {error && (
+            <motion.p
+              key="error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-red-400 text-sm mb-3 text-center"
+            >
+              {error}
+            </motion.p>
+          )}
+        </AnimatePresence>
 
         {/* Email input */}
-        <div className="relative mb-4">
+        <motion.div className="relative mb-4" animate={shakeAnimation}>
           <Mail className="absolute top-3 left-3 text-purple-400" size={18} />
           <input
             type="email"
@@ -47,10 +71,10 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             className="pl-10 w-full p-3 rounded-lg bg-black/60 border border-purple-500/40 text-purple-100 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
-        </div>
+        </motion.div>
 
         {/* Password input */}
-        <div className="relative mb-6">
+        <motion.div className="relative mb-6" animate={shakeAnimation}>
           <Lock className="absolute top-3 left-3 text-purple-400" size={18} />
           <input
             type="password"
@@ -59,7 +83,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             className="pl-10 w-full p-3 rounded-lg bg-black/60 border border-purple-500/40 text-purple-100 placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
-        </div>
+        </motion.div>
 
         {/* Login button */}
         <button

@@ -6,31 +6,24 @@ import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 import { app } from '../../lib/firebaseConfig';
-import {
-  Home,
-  FileText,
-  Type,
-  Image,
-  Scissors,
-  Trash2,
-  FileCheck,
-  Users,
-} from 'lucide-react';
+import { checkSubscriptionStatus, userTier } from '../../lib/razorpayUtils';
 
 const auth = getAuth(app);
 
 export default function Dashboard() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        const isPremium = await checkSubscriptionStatus(currentUser.uid);
+        userTier.isPremium = isPremium; // Update exported tier
         setLoading(false);
       } else {
-        router.push('/login');
+        router.push('/');
       }
     });
 
@@ -40,202 +33,315 @@ export default function Dashboard() {
   const handleSignOut = async () => {
     try {
       await auth.signOut();
-      router.push('/login');
+      router.push('/');
     } catch (error) {
       console.error('Sign out error:', error);
     }
   };
 
+  const handleFeatureClick = (path, isPremium) => {
+    if (isPremium && !userTier.isPremium) {
+      router.push('/payment');
+    } else {
+      router.push(path);
+    }
+  };
+
+  const handleUpgradeClick = () => {
+    router.push('/account');
+  };
+
+  const currentDate = new Date().toLocaleString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-white text-2xl animate-pulse">Loading...</div>
+        <div className="text-white text-2xl">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-white to-pink-50 text-gray-800">
+    <div className="min-h-screen flex bg-gray-100">
       <Head>
         <title>QuickAI - AI Dashboard</title>
-        <meta
-          name="description"
-          content="AI-powered dashboard for authenticated users"
-        />
+        <meta name="description" content="AI-powered dashboard for authenticated users" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-xl p-6 flex flex-col justify-between overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-500 scrollbar-track-gray-200 hover:scrollbar-thumb-indigo-600 rounded-r-2xl">
-        <nav className="space-y-3">
-          <Link
-            href="/dashboard"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
-          >
-            <Home size={18} /> <span className="font-medium">Dashboard</span>
+      <aside className="w-64 bg-gray-50 p-6 overflow-y-auto h-screen">
+        <h2 className="text-xl font-semibold mb-6">Features</h2>
+        <nav className="space-y-4">
+          <Link href="/ai-writing-assistant" className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600">
+            <span className="text-gray-400">📝</span>
+            <span>AI Writing Assistant</span>
+          </Link>
+          <Link href="/text-generation" className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600">
+            <span className="text-gray-400">📝</span>
+            <span>Text Generation</span>
           </Link>
           <Link
-            href="/features/write-article"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+  href="/resume-questions"
+  className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600"
+>
+  <span className="text-green-600">❓</span>
+  <span>Resume Questions</span>
+</Link>
+
+          <div
+            className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600 cursor-pointer"
+            onClick={() => handleFeatureClick('/image-generation', true)}
           >
-            <FileText size={18} />{' '}
-            <span className="font-medium">Write Article</span>
-          </Link>
-          <Link
-            href="/features/blog-titles"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+            <span className="text-yellow-600">🖼️</span>
+            <span className="text-yellow-600">Image Generation</span>
+          </div>
+          <div
+            className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600 cursor-pointer"
+            onClick={() => handleFeatureClick('/remove-background', true)}
           >
-            <Type size={18} /> <span className="font-medium">Blog Titles</span>
-          </Link>
-          <Link
-            href="/features/generate-images"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+            <span className="text-yellow-600">✂️</span>
+            <span className="text-yellow-600">Remove Background</span>
+          </div>
+          <div
+            className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600 cursor-pointer"
+            onClick={() => handleFeatureClick('/remove-object', true)}
           >
-            <Image size={18} />{' '}
-            <span className="font-medium">Generate Images</span>
-          </Link>
-          <Link
-            href="/features/remove-background"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+            <span className="text-yellow-600">🚫</span>
+            <span className="text-yellow-600">Remove Object</span>
+          </div>
+          <div
+            className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600 cursor-pointer"
+            onClick={() => handleFeatureClick('/review-resume', true)}
           >
-            <Scissors size={18} />{' '}
-            <span className="font-medium">Remove Background</span>
-          </Link>
-          <Link
-            href="/features/remove-object"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
-          >
-            <Trash2 size={18} />{' '}
-            <span className="font-medium">Remove Object</span>
-          </Link>
-          <Link
-            href="/features/review-resume"
-            className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-600 transition-all"
-          >
-            <FileCheck size={18} />{' '}
-            <span className="font-medium">Review Resume</span>
-          </Link>
+            <span className="text-yellow-600">📄</span>
+            <span className="text-yellow-600">Review Resume</span>
+          </div>
+
         </nav>
-
-        <div>
-          <Link
-            href="/community"
-            className="flex items-center justify-center space-x-2 mt-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-3 rounded-xl shadow-md hover:opacity-90 transition-all"
-          >
-            <Users size={18} /> <span className="font-semibold">Community</span>
-          </Link>
-
-          <button
-            onClick={handleSignOut}
-            className="mt-6 w-full text-sm text-red-500 hover:text-red-700 font-medium"
-          >
-            Sign Out
-          </button>
-        </div>
+        <div className="mt-auto text-sm text-gray-500">Secured by Firebase</div>
+        <div className="text-sm text-orange-500 mt-2">Development mode</div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
-        {/* Header with User Icon */}
-        <header className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-white to-pink-100 shadow-sm">
-          <h1 className="text-2xl font-bold text-indigo-600">QuickAI</h1>
-          <button
-            onClick={() => router.push('/account')}
-            className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 shadow"
-          >
-            {user?.displayName?.charAt(0) || 'U'}
-          </button>
-        </header>
-
-        {/* Hero Section */}
-        <section className="px-6 py-12 text-center">
-          <span className="text-5xl">✨</span>
-          <h2 className="text-5xl font-extrabold text-indigo-600">
-            Create amazing content
-          </h2>
-          <p className="text-lg text-gray-600 mt-4 max-w-xl mx-auto">
-            Transform your content creation with our suite of premium AI tools.
-            Write articles, generate images, and enhance your workflow.
-          </p>
-          <div className="mt-6 space-x-4">
-            <button className="bg-indigo-600 text-white px-6 py-3 rounded-full shadow-md hover:bg-indigo-700 transition-all">
-              Start creating now
-            </button>
-            <button className="bg-white text-indigo-600 px-6 py-3 rounded-full border border-indigo-600 hover:bg-gray-100 transition-all shadow-sm">
-              Watch demo
-            </button>
-          </div>
-        </section>
-
-        {/* Features Section */}
-        <section className="py-16 px-4 bg-gray-50">
-          <h2 className="text-3xl font-bold text-center mb-12 text-indigo-700">
-            Our Features
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                icon: '📝',
-                title: 'AI Writing Assistant',
-                desc: 'Generate high-quality articles and blog posts with ease using our advanced AI.',
-              },
-              {
-                icon: '🖼️',
-                title: 'Image Generation',
-                desc: 'Create stunning images from text prompts with our powerful AI tools.',
-              },
-              {
-                icon: '🚀',
-                title: 'Workflow Enhancement',
-                desc: 'Streamline your workflow with AI-powered productivity tools.',
-              },
-              {
-                icon: '✍️',
-                title: 'Blog Titles',
-                desc: 'Instantly generate engaging blog titles tailored to your niche.',
-              },
-              {
-                icon: '🎨',
-                title: 'Remove Background',
-                desc: 'Easily remove backgrounds from images with one click.',
-              },
-              {
-                icon: '🧹',
-                title: 'Remove Objects',
-                desc: 'Erase unwanted objects from photos seamlessly.',
-              },
-              {
-                icon: '📄',
-                title: 'Resume Overview',
-                desc: 'Get AI-powered insights to make your resume stand out.',
-              },
-              {
-                icon: '🎯',
-                title: 'Resume Q&A Prep',
-                desc: 'Prepare for interviews with AI-generated resume-based questions.',
-              },
-            ].map((feature, idx) => (
-              <div
-                key={idx}
-                className="bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 text-center"
+      <main className="flex-1 p-8">
+        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-indigo-600">Welcome, {user?.displayName || 'User'}</h1>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">{currentDate}</span>
+              <button
+                onClick={() => router.push('/account')}
+                className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700"
               >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold mb-2 text-indigo-600">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600">{feature.desc}</p>
-              </div>
-            ))}
+                {user?.displayName?.charAt(0) || 'U'}
+              </button>
+            </div>
           </div>
-        </section>
+
+          {/* Features Section */}
+          <section className="py-8">
+            <h2 className="text-2xl font-bold mb-6 text-center">Our Features</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-4 text-indigo-600">📝</div>
+                <h3 className="text-xl font-semibold mb-2">AI Writing Assistant</h3>
+                <p className="text-gray-600">Generate high-quality articles and blog posts with ease.</p>
+                <Link href="/ai-writing-assistant" className="mt-4 inline-block text-indigo-600 hover:text-indigo-800">
+                  Go
+                </Link>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-4 text-indigo-600">📝</div>
+                <h3 className="text-xl font-semibold mb-2">Text Generation</h3>
+                <p className="text-gray-600">Generate high-quality text and a lot of more stuffs.</p>
+                <Link href="/text-generation" className="mt-4 inline-block text-indigo-600 hover:text-indigo-800">
+                  Go
+                </Link>
+              </div>
+              <div
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleFeatureClick('/image-generation', true)}
+              >
+                <div className="text-4xl mb-4 text-yellow-600">🖼️</div>
+                <h3 className="text-xl font-semibold mb-2 text-yellow-600">Image Generation</h3>
+                <p className="text-gray-600">
+                  {userTier.isPremium ? 'Create stunning images.' : 'Available with Premium'}
+                </p>
+                {userTier.isPremium && (
+                  <Link href="/image-generation" className="mt-4 inline-block text-yellow-600 hover:text-yellow-800">
+                    Go
+                  </Link>
+                )}
+              </div>
+              <div
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleFeatureClick('/remove-background', true)}
+              >
+                <div className="text-4xl mb-4 text-yellow-600">✂️</div>
+                <h3 className="text-xl font-semibold mb-2 text-yellow-600">Remove Background</h3>
+                <p className="text-gray-600">
+                  {userTier.isPremium ? 'Remove backgrounds easily.' : 'Available with Premium'}
+                </p>
+                {userTier.isPremium && (
+                  <Link href="/remove-background" className="mt-4 inline-block text-yellow-600 hover:text-yellow-800">
+                    Go
+                  </Link>
+                )}
+              </div>
+              <div
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleFeatureClick('/remove-object', true)}
+              >
+                <div className="text-4xl mb-4 text-yellow-600">🚫</div>
+                <h3 className="text-xl font-semibold mb-2 text-yellow-600">Remove Object</h3>
+                <p className="text-gray-600">
+                  {userTier.isPremium ? 'Remove objects from images.' : 'Available with Premium'}
+                </p>
+                {userTier.isPremium && (
+                  <Link href="/remove-object" className="mt-4 inline-block text-yellow-600 hover:text-yellow-800">
+                    Go
+                  </Link>
+                )}
+              </div>
+              <div
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleFeatureClick('/review-resume', true)}
+              >
+                <div className="text-4xl mb-4 text-yellow-600">📄</div>
+                <h3 className="text-xl font-semibold mb-2 text-yellow-600">Review Resume</h3>
+                <p className="text-gray-600">
+                  {userTier.isPremium ? 'Get resume feedback.' : 'Available with Premium'}
+                </p>
+                {userTier.isPremium && (
+                  <Link href="/review-resume" className="mt-4 inline-block text-yellow-600 hover:text-yellow-800">
+                    Go
+                  </Link>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Subscription Plans Section */}
+          <section className="py-8">
+            <h2 className="text-2xl font-bold mb-6 text-center">Subscription Plans</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {/* Free Plan Card */}
+              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <h3 className="text-2xl font-semibold mb-2 text-gray-800">Free Plan</h3>
+                <p className="text-gray-600 mb-4">Basic features to get started with QuickAI.</p>
+                <ul className="space-y-2">
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span>AI Writing Assistant</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span>Text Generation</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-red-600">✗</span>
+                    <span>Image Generation</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-red-600">✗</span>
+                    <span>Remove Background</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-red-600">✗</span>
+                    <span>Remove Object</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-red-600">✗</span>
+                    <span>Review Resume</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Premium Plan Card */}
+              <div
+                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={handleUpgradeClick}
+              >
+                <h3 className="text-2xl font-semibold mb-2 text-yellow-600">Premium Plan</h3>
+                <p className="text-gray-600 mb-4">Unlock all features with advanced AI tools for $192/year.</p>
+                <ul className="space-y-2">
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span>AI Writing Assistant</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span>Text Generation</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span>Image Generation</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span>Remove Background</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span>Remove Object</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span>Review Resume</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          {/* Contact Section */}
+          <section className="py-16 px-4 bg-white text-center">
+            <h2 className="text-2xl font-bold mb-6">Contact Us</h2>
+            <p className="text-gray-600 mb-8 max-w-xl mx-auto">
+              Have questions or need support? Reach out to us, and we’ll get back to you as soon as possible.
+            </p>
+            <form className="max-w-lg mx-auto space-y-4">
+              <input
+                type="text"
+                placeholder="Your Name"
+                className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <input
+                type="email"
+                placeholder="Your Email"
+                className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+              <textarea
+                placeholder="Your Message"
+                className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                rows="4"
+              />
+              <button
+                type="submit"
+                className="bg-indigo-600 text-white px-6 py-3 rounded-full hover:bg-indigo-700"
+              >
+                Send Message
+              </button>
+            </form>
+          </section>
+        </div>
 
         {/* Footer */}
-        <footer className="bg-gray-900 text-white text-center py-6 mt-6">
-          <p>
-            &copy; {new Date().getFullYear()} QuickAI. All rights reserved.
-          </p>
+        <footer className="bg-gray-900 text-white text-center py-6">
+          <p>&copy; {new Date().getFullYear()} QuickAI. All rights reserved.</p>
         </footer>
       </main>
     </div>
   );
 }
+
+export { userTier }; // Export the user tier status
