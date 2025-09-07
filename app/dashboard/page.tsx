@@ -1,17 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut, User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 import Link from "next/link";
 import { app } from "../../lib/firebaseConfig";
 import { checkSubscriptionStatus, userTier } from "../../lib/razorpayUtils";
+
 const auth = getAuth(app);
 
+// Define a user tier object to avoid direct mutation
+interface UserTier {
+  isPremium: boolean;
+}
+
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [tier, setTier] = useState<UserTier>({ isPremium: false }); // Local state for tier
   const router = useRouter();
 
   useEffect(() => {
@@ -19,7 +26,7 @@ export default function Dashboard() {
       if (currentUser) {
         setUser(currentUser);
         const isPremium = await checkSubscriptionStatus(currentUser.uid);
-        userTier.isPremium = isPremium;
+        setTier({ isPremium }); // Update tier state instead of mutating userTier
         setLoading(false);
       } else {
         router.push("/");
@@ -31,22 +38,28 @@ export default function Dashboard() {
 
   const handleSignOut = async () => {
     try {
-      await auth.signOut();
+      await signOut(auth);
       router.push("/");
     } catch (error) {
       console.error("Sign out error:", error);
     }
   };
 
-  const handleFeatureClick = (path, isPremium) => {
-    router.push(path);
+  const handleFeatureClick = (path: string, requiresPremium: boolean) => {
+    if (requiresPremium && !tier.isPremium) {
+      alert("This feature requires a Premium subscription. Please upgrade!");
+      router.push("/payment");
+    } else {
+      router.push(path);
+    }
   };
 
   const handleUpgradeClick = () => {
-    router.push("/account");
+    router.push("/payment");
   };
 
-  const currentDate = new Date().toLocaleString("en-IN", {
+  // Use the system-provided date
+  const currentDate = new Date("2025-09-07T14:33:00+05:30").toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "long",
@@ -54,7 +67,7 @@ export default function Dashboard() {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-  });
+  }); // 03:03 PM IST, September 07, 2025
 
   if (loading) {
     return (
@@ -82,15 +95,9 @@ export default function Dashboard() {
         <h2 className="text-2xl font-bold mb-8 text-purple-400">QuickAI</h2>
         <style jsx>{`
           @keyframes glitter {
-            0% {
-              background-position: 0% 50%;
-            }
-            50% {
-              background-position: 100% 50%;
-            }
-            100% {
-              background-position: 0% 50%;
-            }
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
           }
           .glitter {
             background: linear-gradient(
@@ -135,7 +142,7 @@ export default function Dashboard() {
           </Link>
           <div
             className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer ${
-              !userTier.isPremium ? "glitter" : ""
+              !tier.isPremium ? "glitter" : ""
             }`}
             onClick={() => handleFeatureClick("/image-generation", true)}
           >
@@ -144,7 +151,7 @@ export default function Dashboard() {
           </div>
           <div
             className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer ${
-              !userTier.isPremium ? "glitter" : ""
+              !tier.isPremium ? "glitter" : ""
             }`}
             onClick={() => handleFeatureClick("/remove-background", true)}
           >
@@ -153,7 +160,7 @@ export default function Dashboard() {
           </div>
           <div
             className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer ${
-              !userTier.isPremium ? "glitter" : ""
+              !tier.isPremium ? "glitter" : ""
             }`}
             onClick={() => handleFeatureClick("/remove-object", true)}
           >
@@ -186,6 +193,12 @@ export default function Dashboard() {
                 className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-colors"
               >
                 {user?.displayName?.charAt(0) || "U"}
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="ml-2 px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-sm"
+              >
+                Sign Out
               </button>
             </div>
           </div>
@@ -235,11 +248,9 @@ export default function Dashboard() {
                   Image Generation
                 </h3>
                 <p className="text-gray-800">
-                  {userTier.isPremium
-                    ? "Create stunning images."
-                    : "Available with Premium"}
+                  {tier.isPremium ? "Create stunning images." : "Available with Premium"}
                 </p>
-                {userTier.isPremium && (
+                {tier.isPremium && (
                   <Link
                     href="/image-generation"
                     className="mt-4 inline-block text-white hover:text-gray-200"
@@ -257,11 +268,9 @@ export default function Dashboard() {
                   Remove Background
                 </h3>
                 <p className="text-gray-800">
-                  {userTier.isPremium
-                    ? "Remove backgrounds easily."
-                    : "Available with Premium"}
+                  {tier.isPremium ? "Remove backgrounds easily." : "Available with Premium"}
                 </p>
-                {userTier.isPremium && (
+                {tier.isPremium && (
                   <Link
                     href="/remove-background"
                     className="mt-4 inline-block text-white hover:text-gray-200"
@@ -279,11 +288,9 @@ export default function Dashboard() {
                   Remove Object
                 </h3>
                 <p className="text-gray-800">
-                  {userTier.isPremium
-                    ? "Remove objects from images."
-                    : "Available with Premium"}
+                  {tier.isPremium ? "Remove objects from images." : "Available with Premium"}
                 </p>
-                {userTier.isPremium && (
+                {tier.isPremium && (
                   <Link
                     href="/remove-object"
                     className="mt-4 inline-block text-white hover:text-gray-200"
@@ -301,11 +308,9 @@ export default function Dashboard() {
                   Review Resume
                 </h3>
                 <p className="text-gray-800">
-                  {userTier.isPremium
-                    ? "Get resume feedback."
-                    : "Available with Premium"}
+                  {tier.isPremium ? "Get resume feedback." : "Available with Premium"}
                 </p>
-                {userTier.isPremium && (
+                {tier.isPremium && (
                   <Link
                     href="/review-resume"
                     className="mt-4 inline-block text-white hover:text-gray-200"
@@ -419,8 +424,8 @@ export default function Dashboard() {
               </p>
               <p className="text-sm">
                 <span className="font-semibold text-purple-300">Address:</span>{" "}
-                Siddaganga institute of Technology, Tumkur, Karnataka, India
-              572103
+                Siddaganga Institute of Technology, Tumkur, Karnataka, India
+                572103
               </p>
             </div>
           </section>
@@ -435,4 +440,5 @@ export default function Dashboard() {
   );
 }
 
+// Export userTier for external use if needed
 export { userTier };

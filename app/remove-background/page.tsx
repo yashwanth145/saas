@@ -1,15 +1,15 @@
 "use client";
-
+import { ChangeEvent } from "react";
 import { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged ,User} from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { app } from "../../lib/firebaseConfig";
-
+import Image from "next/image";
 const AIBackgroundRemover = () => {
-  const [imageFile, setImageFile] = useState(null);
+const [imageFile, setImageFile] = useState<File | null>(null);
   const [processedImage, setProcessedImage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [premium, setPremium] = useState(false);
   const router = useRouter();
 
@@ -39,14 +39,15 @@ const AIBackgroundRemover = () => {
     return () => unsubscribe();
   }, [router]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith("image/")) {
-      setImageFile(file);
-    } else {
-      alert("Please upload a valid image file (JPG, PNG, WebP).");
-    }
-  };
+  
+const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (file && file.type.startsWith("image/")) {
+    setImageFile(file);
+  } else {
+    alert("Please upload a valid image file (JPG, PNG, WebP).");
+  }
+};
 
   const removeBackground = async () => {
     if (!imageFile) return;
@@ -115,7 +116,7 @@ const AIBackgroundRemover = () => {
               <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500"></div>
             </div>
           ) : processedImage && processedImage.startsWith("data:image") ? (
-            <img
+            <Image
               src={processedImage}
               alt="Background Removed"
               className="max-w-full max-h-[600px] object-contain rounded-xl shadow-lg"

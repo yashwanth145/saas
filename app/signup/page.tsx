@@ -4,7 +4,7 @@ import { auth } from "@/lib/firebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -22,8 +22,8 @@ export default function SignupPage() {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err) {
+      setError("Failed to create account"+err);
     }
   }
 

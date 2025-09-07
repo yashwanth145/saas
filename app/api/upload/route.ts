@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,10 +16,7 @@ interface PDFParserInstance {
   getRawTextContent(): string;
 }
 
-// Define interface for PDFParser error data
-interface PDFParserError {
-  parserError: string;
-}
+
 
 export async function POST(req: NextRequest) {
   const formData: FormData = await req.formData();
@@ -48,9 +46,8 @@ export async function POST(req: NextRequest) {
     await fs.writeFile(tempFilePath, fileBuffer);
 
     // Create PDFParser instance with proper typing
-    const pdfParser = new PDFParser(null, 1) as PDFParserInstance;
-    parsedText = await new Promise<string>((resolve, reject) => {
-      pdfParser.on('pdfParser_dataError', (errData: PDFParserError) => reject(errData.parserError));
+    const pdfParser = new PDFParser(null, true) as PDFParserInstance;
+    parsedText = await new Promise<string>((resolve) => {
       pdfParser.on('pdfParser_dataReady', () => resolve(pdfParser.getRawTextContent()));
       pdfParser.loadPDF(tempFilePath);
     });
@@ -67,7 +64,9 @@ export async function POST(req: NextRequest) {
 
     const aiResponse = await model.generateContent(prompt);
 
-    const reviewText = aiResponse.response.candidates[0].content.parts[0].text || 'No review generated';
+
+const reviewText =
+  aiResponse?.response?.candidates?.[0]?.content?.parts?.[0]?.text ?? 'No review generated';
     const response = new NextResponse(JSON.stringify({ review: reviewText }));
     response.headers.set('Content-Type', 'application/json');
     response.headers.set('FileName', fileName);

@@ -1,7 +1,7 @@
 "use client";
-
+import Image from "next/image";
 import { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged ,User} from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { app } from "../../lib/firebaseConfig";
 
@@ -9,7 +9,7 @@ const Aiimagegenerator = () => {
   const [prompt, setPrompt] = useState("");
   const [generatedImage, setGeneratedImage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null); // ✅ Fix here
   const [premium, setPremium] = useState(false);
   const router = useRouter();
 
@@ -86,7 +86,7 @@ const Aiimagegenerator = () => {
             <label className="block text-sm font-medium mb-1">Prompt</label>
             <textarea
               className="w-full p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows="4"
+              rows={4}
               placeholder="Enter your image prompt here..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
@@ -111,7 +111,7 @@ const Aiimagegenerator = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
             </div>
           ) : generatedImage && generatedImage.startsWith("data:image") ? (
-            <img
+            <Image
               src={generatedImage}
               alt="Generated"
               className="max-w-full max-h-[500px] object-contain rounded-lg"

@@ -16,8 +16,8 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError("Invalid credentials");
+    } catch (err) {
+      setError("Invalid credentials: " + err);
       setShake(true);
 
       // Clear input fields

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged ,User} from "firebase/auth";
 import { useRouter } from "next/navigation";
 import {app} from "../../lib/firebaseConfig"; // Adjust the path to your Firebase config
 
@@ -10,7 +10,7 @@ const Aiwritingassistant = () => {
   const [tokenCount, setTokenCount] = useState(100);
   const [generatedText, setGeneratedText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
   // Check Firebase authentication state
@@ -71,7 +71,7 @@ const Aiwritingassistant = () => {
             <label className="block text-sm font-medium mb-1">Prompt</label>
             <textarea
               className="w-full p-3 bg-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows="4"
+              rows={4}
               placeholder="Enter your prompt here..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}

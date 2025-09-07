@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useState, useEffect,ChangeEvent } from "react";
+import { getAuth, onAuthStateChanged,User } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { app } from "../../lib/firebaseConfig";
-
+import Image from "next/image";
 const AIImageEnhancer = () => {
-  const [imageFile, setImageFile] = useState(null);
+const [imageFile, setImageFile] = useState<File | null>(null);
   const [enhancedImage, setEnhancedImage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [premium, setPremium] = useState(false);
   const router = useRouter();
 
@@ -39,8 +39,8 @@ const AIImageEnhancer = () => {
     return () => unsubscribe();
   }, [router]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
       setImageFile(file);
     } else {
@@ -115,7 +115,7 @@ const AIImageEnhancer = () => {
               <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-purple-500"></div>
             </div>
           ) : enhancedImage && enhancedImage.startsWith("data:image") ? (
-            <img
+            <Image
               src={enhancedImage}
               alt="Enhanced Image"
               className="max-w-full max-h-[600px] object-contain rounded-xl shadow-lg"
