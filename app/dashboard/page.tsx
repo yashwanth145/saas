@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import Head from "next/head";
 import Link from "next/link";
 import { app } from "../../lib/firebaseConfig";
-import { checkSubscriptionStatus, userTier } from "../../lib/razorpayUtils";
+import { checkSubscriptionStatus } from "../../lib/razorpayUtils";
 
 const auth = getAuth(app);
 
-// Define a user tier object to avoid direct mutation
+// Define a user tier interface
 interface UserTier {
   isPremium: boolean;
 }
@@ -18,15 +18,20 @@ interface UserTier {
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tier, setTier] = useState<UserTier>({ isPremium: false }); // Local state for tier
+  const [tier, setTier] = useState<UserTier>({ isPremium: false });
   const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        const isPremium = await checkSubscriptionStatus(currentUser.uid);
-        setTier({ isPremium }); // Update tier state instead of mutating userTier
+        try {
+          const isPremium = await checkSubscriptionStatus(currentUser.uid);
+          setTier({ isPremium });
+        } catch (error) {
+          console.error("Error checking subscription status:", error);
+          setTier({ isPremium: false }); // Fallback to free tier on error
+        }
         setLoading(false);
       } else {
         router.push("/");
@@ -59,7 +64,7 @@ export default function Dashboard() {
   };
 
   // Use the system-provided date
-  const currentDate = new Date("2025-09-07T14:33:00+05:30").toLocaleString("en-IN", {
+  const currentDate = new Date("2025-09-07T20:20:00+05:30").toLocaleString("en-IN", {
     timeZone: "Asia/Kolkata",
     day: "2-digit",
     month: "long",
@@ -67,7 +72,7 @@ export default function Dashboard() {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-  }); // 03:03 PM IST, September 07, 2025
+  }); // 08:20 PM IST, September 07, 2025
 
   if (loading) {
     return (
@@ -439,6 +444,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-// Export userTier for external use if needed
-export { userTier };
