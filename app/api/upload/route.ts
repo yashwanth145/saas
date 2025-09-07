@@ -1,12 +1,25 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import PDFParser from 'pdf2json';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+// Initialize Google Generative AI
 const genAI = new GoogleGenerativeAI("AIzaSyAUGJLk9ag27tbf-kmMaMNmY_jnNeFLVg4");
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// Define interface for PDFParser to avoid using `any`
+interface PDFParserInstance {
+  on(event: string, callback: (data: unknown) => void): void;
+  loadPDF(path: string): void;
+  getRawTextContent(): string;
+}
+
+// Define interface for PDFParser error data
+interface PDFParserError {
+  parserError: string;
+}
+
 export async function POST(req: NextRequest) {
   const formData: FormData = await req.formData();
   const uploadedFiles = formData.getAll('filepond');
@@ -34,9 +47,10 @@ export async function POST(req: NextRequest) {
     const fileBuffer = Buffer.from(await uploadedFile.arrayBuffer());
     await fs.writeFile(tempFilePath, fileBuffer);
 
-    const pdfParser = new (PDFParser as any)(null, 1);
+    // Create PDFParser instance with proper typing
+    const pdfParser = new PDFParser(null, 1) as PDFParserInstance;
     parsedText = await new Promise<string>((resolve, reject) => {
-      pdfParser.on('pdfParser_dataError', (errData: any) => reject(errData.parserError));
+      pdfParser.on('pdfParser_dataError', (errData: PDFParserError) => reject(errData.parserError));
       pdfParser.on('pdfParser_dataReady', () => resolve(pdfParser.getRawTextContent()));
       pdfParser.loadPDF(tempFilePath);
     });
@@ -51,10 +65,9 @@ export async function POST(req: NextRequest) {
       ${parsedText}
     `;
 
-   
     const aiResponse = await model.generateContent(prompt);
 
-    const reviewText = aiResponse.response.candidates[0].content.parts[0].text|| 'No review generated';
+    const reviewText = aiResponse.response.candidates[0].content.parts[0].text || 'No review generated';
     const response = new NextResponse(JSON.stringify({ review: reviewText }));
     response.headers.set('Content-Type', 'application/json');
     response.headers.set('FileName', fileName);
