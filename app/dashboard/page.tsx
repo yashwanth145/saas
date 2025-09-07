@@ -1,13 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
-import Head from 'next/head';
-import Link from 'next/link';
-import { app } from '../../lib/firebaseConfig';
-import { checkSubscriptionStatus, userTier } from '../../lib/razorpayUtils';
-
+import { useEffect, useState } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import Head from "next/head";
+import Link from "next/link";
+import { app } from "../../lib/firebaseConfig";
+import { checkSubscriptionStatus, userTier } from "../../lib/razorpayUtils";
 const auth = getAuth(app);
 
 export default function Dashboard() {
@@ -20,10 +19,10 @@ export default function Dashboard() {
       if (currentUser) {
         setUser(currentUser);
         const isPremium = await checkSubscriptionStatus(currentUser.uid);
-        userTier.isPremium = isPremium; // Update exported tier
+        userTier.isPremium = isPremium;
         setLoading(false);
       } else {
-        router.push('/');
+        router.push("/");
       }
     });
 
@@ -33,196 +32,284 @@ export default function Dashboard() {
   const handleSignOut = async () => {
     try {
       await auth.signOut();
-      router.push('/');
+      router.push("/");
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error("Sign out error:", error);
     }
   };
 
   const handleFeatureClick = (path, isPremium) => {
-    if (isPremium && !userTier.isPremium) {
-      router.push('/payment');
-    } else {
-      router.push(path);
-    }
+    router.push(path);
   };
 
   const handleUpgradeClick = () => {
-    router.push('/account');
+    router.push("/account");
   };
 
-  const currentDate = new Date().toLocaleString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  const currentDate = new Date().toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: true,
   });
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-white text-2xl">Loading...</div>
+        <div className="text-white text-lg font-medium animate-pulse">
+          Preparing your Dashboard...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex bg-gray-900 text-white">
       <Head>
         <title>QuickAI - AI Dashboard</title>
-        <meta name="description" content="AI-powered dashboard for authenticated users" />
+        <meta
+          name="description"
+          content="AI-powered dashboard for authenticated users"
+        />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-50 p-6 overflow-y-auto h-screen">
-        <h2 className="text-xl font-semibold mb-6">Features</h2>
-        <nav className="space-y-4">
-          <Link href="/ai-writing-assistant" className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600">
-            <span className="text-gray-400">📝</span>
-            <span>AI Writing Assistant</span>
-          </Link>
-          <Link href="/text-generation" className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600">
-            <span className="text-gray-400">📝</span>
-            <span>Text Generation</span>
+      <aside className="w-64 bg-black p-6 overflow-y-auto h-screen border-r border-gray-800">
+        <h2 className="text-2xl font-bold mb-8 text-purple-400">QuickAI</h2>
+        <style jsx>{`
+          @keyframes glitter {
+            0% {
+              background-position: 0% 50%;
+            }
+            50% {
+              background-position: 100% 50%;
+            }
+            100% {
+              background-position: 0% 50%;
+            }
+          }
+          .glitter {
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 215, 0, 0.3),
+              rgba(255, 215, 0, 0.6),
+              rgba(255, 215, 0, 0.3),
+              transparent
+            );
+            background-size: 200% 100%;
+            animation: glitter 7s linear infinite;
+          }
+
+          .freepremium {
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(79, 6, 96, 0.73),
+              rgba(191, 0, 255, 0.6),
+              rgba(9, 8, 0, 0.3),
+              transparent
+            );
+            background-size: 200% 100%;
+            animation: glitter 7s linear infinite;
+          }
+        `}</style>
+        <nav className="space-y-3">
+          <Link
+            href="/ai-writing-assistant"
+            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <span className="text-purple-400">📝</span>
+            <span className="text-white font-medium">AI Writing Assistant</span>
           </Link>
           <Link
-  href="/resume-questions"
-  className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600"
->
-  <span className="text-green-600">❓</span>
-  <span>Resume Questions</span>
-</Link>
-
-          <div
-            className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600 cursor-pointer"
-            onClick={() => handleFeatureClick('/image-generation', true)}
+            href="/text-generation"
+            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors"
           >
-            <span className="text-yellow-600">🖼️</span>
-            <span className="text-yellow-600">Image Generation</span>
+            <span className="text-purple-400">📝</span>
+            <span className="text-white font-medium">Text Generation</span>
+          </Link>
+          <div
+            className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer ${
+              !userTier.isPremium ? "glitter" : ""
+            }`}
+            onClick={() => handleFeatureClick("/image-generation", true)}
+          >
+            <span className="text-white">🖼️</span>
+            <span className="text-white font-medium">Image Generation</span>
           </div>
           <div
-            className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600 cursor-pointer"
-            onClick={() => handleFeatureClick('/remove-background', true)}
+            className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer ${
+              !userTier.isPremium ? "glitter" : ""
+            }`}
+            onClick={() => handleFeatureClick("/remove-background", true)}
           >
-            <span className="text-yellow-600">✂️</span>
-            <span className="text-yellow-600">Remove Background</span>
+            <span className="text-white">✂️</span>
+            <span className="text-white font-medium">Remove Background</span>
           </div>
           <div
-            className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600 cursor-pointer"
-            onClick={() => handleFeatureClick('/remove-object', true)}
+            className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer ${
+              !userTier.isPremium ? "glitter" : ""
+            }`}
+            onClick={() => handleFeatureClick("/remove-object", true)}
           >
-            <span className="text-yellow-600">🚫</span>
-            <span className="text-yellow-600">Remove Object</span>
+            <span className="text-white">🚫</span>
+            <span className="text-white font-medium">Remove Object</span>
           </div>
           <div
-            className="flex items-center space-x-2 text-gray-800 hover:text-indigo-600 cursor-pointer"
-            onClick={() => handleFeatureClick('/review-resume', true)}
+            className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer ${"freepremium"}`}
+            onClick={() => handleFeatureClick("/review-resume", true)}
           >
-            <span className="text-yellow-600">📄</span>
-            <span className="text-yellow-600">Review Resume</span>
+            <span className="text-white">📄</span>
+            <span className="text-white font-medium">Review Resume</span>
           </div>
-
         </nav>
-        <div className="mt-auto text-sm text-gray-500">Secured by Firebase</div>
-        <div className="text-sm text-orange-500 mt-2">Development mode</div>
+        <div className="mt-auto text-sm text-gray-400">Secured by Firebase</div>
+        <div className="text-sm text-purple-600 mt-2">Development Mode</div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8">
-        <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-indigo-600">Welcome, {user?.displayName || 'User'}</h1>
+      <main className="flex-1 p-8 bg-gradient-to-br from-purple-900 to-black overflow-y-auto">
+        <div className="max-w-5xl mx-auto bg-black p-8 rounded-xl shadow-2xl border border-gray-800">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-purple-400">
+              Welcome, {user?.displayName || "User"}
+            </h1>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">{currentDate}</span>
+              <span className="text-sm text-gray-400">{currentDate}</span>
               <button
-                onClick={() => router.push('/account')}
-                className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700"
+                onClick={() => router.push("/account")}
+                className="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center hover:bg-purple-700 transition-colors"
               >
-                {user?.displayName?.charAt(0) || 'U'}
+                {user?.displayName?.charAt(0) || "U"}
               </button>
             </div>
           </div>
 
           {/* Features Section */}
           <section className="py-8">
-            <h2 className="text-2xl font-bold mb-6 text-center">Our Features</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center text-purple-400">
+              Our Features
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-4 text-indigo-600">📝</div>
-                <h3 className="text-xl font-semibold mb-2">AI Writing Assistant</h3>
-                <p className="text-gray-600">Generate high-quality articles and blog posts with ease.</p>
-                <Link href="/ai-writing-assistant" className="mt-4 inline-block text-indigo-600 hover:text-indigo-800">
+              <div className="bg-gradient-to-br from-white to-purple-600 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-4 text-black">📝</div>
+                <h3 className="text-xl font-semibold mb-2 text-black">
+                  AI Writing Assistant
+                </h3>
+                <p className="text-gray-800">
+                  Generate high-quality articles and blog posts with ease.
+                </p>
+                <Link
+                  href="/ai-writing-assistant"
+                  className="mt-4 inline-block text-black hover:text-gray-900"
+                >
                   Go
                 </Link>
               </div>
-              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-4 text-indigo-600">📝</div>
-                <h3 className="text-xl font-semibold mb-2">Text Generation</h3>
-                <p className="text-gray-600">Generate high-quality text and a lot of more stuffs.</p>
-                <Link href="/text-generation" className="mt-4 inline-block text-indigo-600 hover:text-indigo-800">
+              <div className="bg-gradient-to-br from-white to-purple-600 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-4 text-black">📝</div>
+                <h3 className="text-xl font-semibold mb-2 text-black">
+                  Text Generation
+                </h3>
+                <p className="text-gray-800">
+                  Generate high-quality text and a lot of more stuffs.
+                </p>
+                <Link
+                  href="/text-generation"
+                  className="mt-4 inline-block text-black hover:text-gray-900"
+                >
                   Go
                 </Link>
               </div>
               <div
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => handleFeatureClick('/image-generation', true)}
+                className="bg-gradient-to-br from-white to-purple-600 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleFeatureClick("/image-generation", true)}
               >
-                <div className="text-4xl mb-4 text-yellow-600">🖼️</div>
-                <h3 className="text-xl font-semibold mb-2 text-yellow-600">Image Generation</h3>
-                <p className="text-gray-600">
-                  {userTier.isPremium ? 'Create stunning images.' : 'Available with Premium'}
+                <div className="text-4xl mb-4 text-white">🖼️</div>
+                <h3 className="text-xl font-semibold mb-2 text-white">
+                  Image Generation
+                </h3>
+                <p className="text-gray-800">
+                  {userTier.isPremium
+                    ? "Create stunning images."
+                    : "Available with Premium"}
                 </p>
                 {userTier.isPremium && (
-                  <Link href="/image-generation" className="mt-4 inline-block text-yellow-600 hover:text-yellow-800">
+                  <Link
+                    href="/image-generation"
+                    className="mt-4 inline-block text-white hover:text-gray-200"
+                  >
                     Go
                   </Link>
                 )}
               </div>
               <div
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => handleFeatureClick('/remove-background', true)}
+                className="bg-gradient-to-br from-white to-purple-600 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleFeatureClick("/remove-background", true)}
               >
-                <div className="text-4xl mb-4 text-yellow-600">✂️</div>
-                <h3 className="text-xl font-semibold mb-2 text-yellow-600">Remove Background</h3>
-                <p className="text-gray-600">
-                  {userTier.isPremium ? 'Remove backgrounds easily.' : 'Available with Premium'}
+                <div className="text-4xl mb-4 text-white">✂️</div>
+                <h3 className="text-xl font-semibold mb-2 text-white">
+                  Remove Background
+                </h3>
+                <p className="text-gray-800">
+                  {userTier.isPremium
+                    ? "Remove backgrounds easily."
+                    : "Available with Premium"}
                 </p>
                 {userTier.isPremium && (
-                  <Link href="/remove-background" className="mt-4 inline-block text-yellow-600 hover:text-yellow-800">
+                  <Link
+                    href="/remove-background"
+                    className="mt-4 inline-block text-white hover:text-gray-200"
+                  >
                     Go
                   </Link>
                 )}
               </div>
               <div
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => handleFeatureClick('/remove-object', true)}
+                className="bg-gradient-to-br from-white to-purple-600 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleFeatureClick("/remove-object", true)}
               >
-                <div className="text-4xl mb-4 text-yellow-600">🚫</div>
-                <h3 className="text-xl font-semibold mb-2 text-yellow-600">Remove Object</h3>
-                <p className="text-gray-600">
-                  {userTier.isPremium ? 'Remove objects from images.' : 'Available with Premium'}
+                <div className="text-4xl mb-4 text-white">🚫</div>
+                <h3 className="text-xl font-semibold mb-2 text-white">
+                  Remove Object
+                </h3>
+                <p className="text-gray-800">
+                  {userTier.isPremium
+                    ? "Remove objects from images."
+                    : "Available with Premium"}
                 </p>
                 {userTier.isPremium && (
-                  <Link href="/remove-object" className="mt-4 inline-block text-yellow-600 hover:text-yellow-800">
+                  <Link
+                    href="/remove-object"
+                    className="mt-4 inline-block text-white hover:text-gray-200"
+                  >
                     Go
                   </Link>
                 )}
               </div>
               <div
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => handleFeatureClick('/review-resume', true)}
+                className="bg-gradient-to-br from-white to-purple-600 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => handleFeatureClick("/review-resume", true)}
               >
-                <div className="text-4xl mb-4 text-yellow-600">📄</div>
-                <h3 className="text-xl font-semibold mb-2 text-yellow-600">Review Resume</h3>
-                <p className="text-gray-600">
-                  {userTier.isPremium ? 'Get resume feedback.' : 'Available with Premium'}
+                <div className="text-4xl mb-4 text-white">📄</div>
+                <h3 className="text-xl font-semibold mb-2 text-white">
+                  Review Resume
+                </h3>
+                <p className="text-gray-800">
+                  {userTier.isPremium
+                    ? "Get resume feedback."
+                    : "Available with Premium"}
                 </p>
                 {userTier.isPremium && (
-                  <Link href="/review-resume" className="mt-4 inline-block text-yellow-600 hover:text-yellow-800">
+                  <Link
+                    href="/review-resume"
+                    className="mt-4 inline-block text-white hover:text-gray-200"
+                  >
                     Go
                   </Link>
                 )}
@@ -232,71 +319,81 @@ export default function Dashboard() {
 
           {/* Subscription Plans Section */}
           <section className="py-8">
-            <h2 className="text-2xl font-bold mb-6 text-center">Subscription Plans</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center text-purple-400">
+              Subscription Plans
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {/* Free Plan Card */}
-              <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                <h3 className="text-2xl font-semibold mb-2 text-gray-800">Free Plan</h3>
-                <p className="text-gray-600 mb-4">Basic features to get started with QuickAI.</p>
+              <div className="bg-gradient-to-br from-white to-purple-600 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <h3 className="text-2xl font-semibold mb-2 text-black">
+                  Free Plan
+                </h3>
+                <p className="text-gray-800 mb-4">
+                  Basic features to get started with QuickAI.
+                </p>
                 <ul className="space-y-2">
                   <li className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span>AI Writing Assistant</span>
+                    <span className="text-green-900">✓</span>
+                    <span className="text-black">AI Writing Assistant</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span>Text Generation</span>
+                    <span className="text-green-900">✓</span>
+                    <span className="text-black">Text Generation</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-red-600">✗</span>
-                    <span>Image Generation</span>
+                    <span className="text-red-900">✗</span>
+                    <span className="text-black">Image Generation</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-red-600">✗</span>
-                    <span>Remove Background</span>
+                    <span className="text-red-900">✗</span>
+                    <span className="text-black">Remove Background</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-red-600">✗</span>
-                    <span>Remove Object</span>
+                    <span className="text-red-900">✗</span>
+                    <span className="text-black">Remove Object</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-red-600">✗</span>
-                    <span>Review Resume</span>
+                    <span className="text-red-900">✗</span>
+                    <span className="text-black">Review Resume</span>
                   </li>
                 </ul>
               </div>
 
               {/* Premium Plan Card */}
               <div
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                className="bg-gradient-to-br from-white to-purple-600 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
                 onClick={handleUpgradeClick}
               >
-                <h3 className="text-2xl font-semibold mb-2 text-yellow-600">Premium Plan</h3>
-                <p className="text-gray-600 mb-4">Unlock all features with advanced AI tools for $192/year.</p>
+                <h3 className="text-2xl font-semibold mb-2 text-white">
+                  Premium Plan
+                </h3>
+                <p className="text-gray-800 mb-4">
+                  Unlock all features with advanced AI tools for $192/year.
+                </p>
                 <ul className="space-y-2">
                   <li className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span>AI Writing Assistant</span>
+                    <span className="text-green-900">✓</span>
+                    <span className="text-black">AI Writing Assistant</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span>Text Generation</span>
+                    <span className="text-green-900">✓</span>
+                    <span className="text-black">Text Generation</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span>Image Generation</span>
+                    <span className="text-green-900">✓</span>
+                    <span className="text-white">Image Generation</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span>Remove Background</span>
+                    <span className="text-green-900">✓</span>
+                    <span className="text-white">Remove Background</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span>Remove Object</span>
+                    <span className="text-green-900">✓</span>
+                    <span className="text-white">Remove Object</span>
                   </li>
                   <li className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span>Review Resume</span>
+                    <span className="text-green-900">✓</span>
+                    <span className="text-white">Review Resume</span>
                   </li>
                 </ul>
               </div>
@@ -304,39 +401,33 @@ export default function Dashboard() {
           </section>
 
           {/* Contact Section */}
-          <section className="py-16 px-4 bg-white text-center">
-            <h2 className="text-2xl font-bold mb-6">Contact Us</h2>
-            <p className="text-gray-600 mb-8 max-w-xl mx-auto">
-              Have questions or need support? Reach out to us, and we’ll get back to you as soon as possible.
+          <section className="py-16 px-4 bg-gray-950/80 backdrop-blur-lg text-center rounded-3xl border border-purple-500/20">
+            <h2 className="text-3xl font-extrabold text-purple-300 mb-6 tracking-tight">
+              Contact Us
+            </h2>
+            <p className="text-purple-200/70 mb-8 max-w-xl mx-auto text-lg">
+              Have questions or need support? Reach out to our team, and we’ll
+              assist you promptly.
             </p>
-            <form className="max-w-lg mx-auto space-y-4">
-              <input
-                type="text"
-                placeholder="Your Name"
-                className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              />
-              <input
-                type="email"
-                placeholder="Your Email"
-                className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              />
-              <textarea
-                placeholder="Your Message"
-                className="w-full p-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                rows="4"
-              />
-              <button
-                type="submit"
-                className="bg-indigo-600 text-white px-6 py-3 rounded-full hover:bg-indigo-700"
-              >
-                Send Message
-              </button>
-            </form>
+            <div className="max-w-lg mx-auto space-y-4 text-purple-200">
+              <p className="text-sm">
+                <span className="font-semibold text-purple-300">Email:</span>{" "}
+                yashwanthreddy05official@gmail.com
+              </p>
+              <p className="text-sm">
+                <span className="font-semibold text-purple-300">Phone:</span> +91 7975460043
+              </p>
+              <p className="text-sm">
+                <span className="font-semibold text-purple-300">Address:</span>{" "}
+                Siddaganga institute of Technology, Tumkur, Karnataka, India
+              572103
+              </p>
+            </div>
           </section>
         </div>
 
         {/* Footer */}
-        <footer className="bg-gray-900 text-white text-center py-6">
+        <footer className="bg-black text-gray-400 text-center py-6 mt-8">
           <p>&copy; {new Date().getFullYear()} QuickAI. All rights reserved.</p>
         </footer>
       </main>
@@ -344,4 +435,4 @@ export default function Dashboard() {
   );
 }
 
-export { userTier }; // Export the user tier status
+export { userTier };

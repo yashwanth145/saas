@@ -20,7 +20,7 @@ export default function Payment() {
         setUser(currentUser);
         setLoading(false);
       } else {
-        router.push('/login');
+        router.push('/');
       }
     });
 
@@ -42,8 +42,8 @@ export default function Payment() {
     if (!user || !razorpayLoaded) return;
 
     const options = {
-      key: 'rzp_test_YOUR_KEY', // Replace with your Razorpay test key
-      amount: '19200', // Amount in paise (e.g., $192 * 100)
+      key: process.env.RAZORPAY_KEY_ID, // Replace with your Razorpay test key
+      amount: '100', // Amount in paise (e.g., $192 * 100)
       currency: 'INR',
       name: 'QuickAI',
       description: 'Premium Subscription',
@@ -51,12 +51,12 @@ export default function Payment() {
       order_id: '', // Generate order_id via your backend
       handler: function (response) {
         alert('Payment successful! Redirecting to dashboard...');
-        router.push('/account');
+        router.push('/dashboard');
       },
       prefill: {
         name: user.displayName || 'User',
         email: user.email,
-        contact: '9000090000', // Replace with user's contact if available
+        contact: '7975460043', // Replace with user's contact if available
       },
       notes: {
         user_id: user.uid,
@@ -87,7 +87,7 @@ export default function Payment() {
       </Head>
       <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg text-center">
         <h1 className="text-3xl font-bold mb-4 text-indigo-600">Upgrade to Premium</h1>
-        <p className="text-gray-600 mb-6">Unlock all features with a premium subscription for $192/year.</p>
+        <p className="text-gray-600 mb-6">Unlock all features with a premium subscription for 1rupee/year.</p>
         <button
           onClick={handlePayment}
           disabled={!razorpayLoaded}
